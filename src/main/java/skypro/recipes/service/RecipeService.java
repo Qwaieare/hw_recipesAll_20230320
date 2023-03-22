@@ -19,5 +19,5 @@ public interface RecipeService {
     boolean deleteAllRecipe();
 
 
-    Path createRecipe(Ingredient ingredient);
+    Path createRecipe();
 }

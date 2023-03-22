@@ -9,8 +9,8 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 public class Ingredient {
 
-    private String nameIngredient;
-    private int number;
-    private String measurement;
+    private String nameIngredient; // название ингредиента
+    private int number; // количество
+    private String measurement; // мера измерения
 
 }

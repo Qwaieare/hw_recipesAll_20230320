@@ -1,4 +1,5 @@
 package skypro.recipes.controllers;
+import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.Parameters;
 import io.swagger.v3.oas.annotations.media.ArraySchema;
@@ -22,6 +23,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.time.LocalDateTime;
 import java.util.Map;
 
 
@@ -38,14 +40,36 @@ public class RecipeController {
         this.recipeService = recipeService;
     }
 
+
+    @Operation(
+            summary = "Создаем новый рецепт"
+    )
+    @ApiResponses(value = {
+            @ApiResponse(
+                    responseCode = "200",
+                    description = "Рецепт был добавлен"
+            )})
     @PostMapping
-    public ResponseEntity<Long> addNewRecipe(@RequestBody Recipe recipe) {
+    public ResponseEntity<Long> addNewRecipe(@RequestBody Recipe recipe) { // создаем новый рецепт
         Long idRec = recipeService.addNewRecipe(recipe);
         return ResponseEntity.ok(idRec);
     }
 
+
+    @Operation(
+            summary = "Получаем рецепт по его id"
+    )
+    @ApiResponses(value = {
+            @ApiResponse(
+                    responseCode = "200",
+                    description = "Рецепт найден"
+            ),
+            @ApiResponse(
+                    responseCode = "404",
+                    description = "Рецепт не найден"
+            ) } )
     @GetMapping("/{idRec}")
-    public ResponseEntity<Recipe> getRecipe(@PathVariable Long idRec) {
+    public ResponseEntity<Recipe> getRecipe(@PathVariable Long idRec) { // получаем рецепт по его id
         Recipe recipe1 = recipeService.getRecipe(idRec);
         if (recipe1 == null) {
             return ResponseEntity.notFound().build();
@@ -64,12 +88,8 @@ public class RecipeController {
                             @Content(
                                     mediaType = "application/json",
                                     array = @ArraySchema(schema = @Schema(implementation = Recipe.class))
-                            )
-                    }
-            )
-    }
-  )
-    public  ResponseEntity<Map<Long, Recipe>> getAllRecipe()  {
+                            ) } ) } )
+    public  ResponseEntity<Map<Long, Recipe>> getAllRecipe()  { //Получаем список всех рецептов
         Map<Long, Recipe> recipeL = recipeService.getAllRecipe();
         if (recipeL == null) {
             return ResponseEntity.notFound().build();
@@ -78,26 +98,50 @@ public class RecipeController {
     }
 
 
+    @Operation(
+            summary = "Редактируем рецепт по его id"
+    )
+    @ApiResponses(value = {
+            @ApiResponse(
+                    responseCode = "200",
+                    description = "Рецепт был отредактирован"
+            ),
+            @ApiResponse(
+                    responseCode = "404",
+                    description = "Рецепт не отредактирован"
+            )})
     @PutMapping("/{idRec}")
-    @Parameters(value = {
-            @Parameter(name = "idRec", example = "recipe")
-    }
-  )
-    public ResponseEntity<Recipe> putRecipe(@PathVariable Long idRec, @RequestBody Recipe recipe) {
-        Recipe recipe1 = recipeService.putRecipe(idRec, recipe);
-        if (recipe1 == null) {
+    public ResponseEntity<Recipe> putRecipe(@PathVariable Long idRec, @RequestBody Recipe recipe) { //Редактируем рецепт по его id
+         recipe = recipeService.putRecipe(idRec, recipe);
+        if (recipe == null) {
             return ResponseEntity.notFound().build();
         }
-        return ResponseEntity.ok(recipe1);
+        return ResponseEntity.ok(recipe);
     }
 
+
+
+    @Operation(
+            summary = "Удаляем рецепт по его id"
+    )
+    @ApiResponses(value = {
+            @ApiResponse(
+                    responseCode = "200",
+                    description = "Рецепт был удален"
+            ),
+            @ApiResponse(
+                    responseCode = "404",
+                    description = "Рецепт не удален"
+            )})
     @DeleteMapping("/{idRec}")
-    public ResponseEntity<Void> deleteRecipe(@PathVariable Long idRec) {
+    public ResponseEntity<Void> deleteRecipe(@PathVariable Long idRec) { //Удаляем рецепт по его id
         if (recipeService.deleteRecipe(idRec)) {
             return ResponseEntity.ok().build();
         }
         return ResponseEntity.notFound().build();
     }
+
+
 
     @DeleteMapping
     public ResponseEntity<Void> deleteAllRecipe() {
@@ -105,22 +149,27 @@ public class RecipeController {
         return ResponseEntity.ok().build();
     }
 
-    @GetMapping("/Ingredient")
-    public ResponseEntity<Object> getRecipeRead(@RequestBody Ingredient ingredient) {
+    @Operation(
+            summary = "Загружаем список рецептов в формате txt"
+    )
+    @GetMapping(value = "/getAllRecipe")
+    public ResponseEntity<Object> getRecipeRead() {
         try {
-            Path path = recipeService.createRecipe(ingredient);
-            if (Files.size(path) == 0) {
-                return ResponseEntity.noContent().build();
+            Path path = recipeService.createRecipe();
+            if (Files.size(path) == 0) {   //Если файл пустой
+                return ResponseEntity.noContent().build();   //Статус 204
             }
-            InputStreamResource resource = new InputStreamResource(new FileInputStream(path.toFile()));
-            return ResponseEntity.ok()
-                    .contentType(MediaType.TEXT_PLAIN)
-                    .contentLength(Files.size(path))
-                    .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + ingredient + " -report.txt\"")
+            InputStreamResource resource = new InputStreamResource(new FileInputStream(path.toFile()));  //Берем у файла входной поток, заворачиваем его в ресурс
+            return ResponseEntity.ok()    //Формируем и возвращаем HTTP ответ
+                    .contentType(MediaType.TEXT_PLAIN)    //Задаем тип файла
+                    .contentLength(Files.size(path))    //Узнаем длину файла
+                    .header(HttpHeaders.CONTENT_DISPOSITION,
+                            "attachment; filename=\"" + LocalDateTime.now() + "-report.txt\"")  //Задаем название файла
                     .body(resource);
-        } catch (IOException e) {
+
+        } catch (IOException e) {       //При исключении отправляем код
             e.printStackTrace();
-            return ResponseEntity.internalServerError().body(e.toString());
+            return ResponseEntity.internalServerError().body(e.toString()); // код 500
         }
     }
 

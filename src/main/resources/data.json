@@ -1,0 +1,30 @@
+{
+  "0": {
+    "nameOfRecipe": "string",
+    "tame": 0,
+    "ingredient": [
+      {
+        "nameIngredient": "string",
+        "number": 0,
+        "measurement": "string"
+      }
+    ],
+    "preparationStep": [
+      "string"
+    ]
+  },
+  "1": {
+    "nameOfRecipe": "string",
+    "tame": 0,
+    "ingredient": [
+      {
+        "nameIngredient": "string",
+        "number": 0,
+        "measurement": "string"
+      }
+    ],
+    "preparationStep": [
+      "string"
+    ]
+  }
+}
